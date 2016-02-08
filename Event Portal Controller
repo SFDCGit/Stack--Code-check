@@ -1,0 +1,200 @@
+public class EventPortal_Detail {
+      public String Event { get; set; }
+      /*
+        Description : Internal class. Store Attendee information. Where we do search.
+    */
+    public class AttendeeInfo
+    {
+        public string strId         {get; set;}
+        public string strName       {get; set;}
+        public string FirstName     {get; set;}
+        public string LastName      {get; set;}
+        public string Title         {get; set;}
+        public string Phone         {get; set;}
+        public string strEmail      {get; set;}
+        public string CompanyName   {get; set;}
+
+        public AttendeeInfo(Contact sContact){
+        
+            this.strId          = sContact.id;
+            this.strName        = sContact.Name;
+            this.FirstName      = sContact.FirstName;
+            this.LastName       = sContact.LastName;
+            this.Title          = sContact.Title != null ? sContact.Title : '';
+            this.Phone          = sContact.Phone != null ? sContact.Phone : '';
+            this.strEmail       = sContact.Email;
+            this.CompanyName    = sContact.Account.Name;
+        }
+        }
+
+  /* NH 08/02/2016 ---- Update Event Request record with the details entered by MD/Cal*/
+ public PageReference updateEventRequest() {
+		system.debug ('hello');
+     	update sEventRequest;
+		system.debug('Saved WBS = ' + sEventRequest.WBS__c);
+        return null;
+   }    
+    
+    
+/*        Description : Internal class. Store Event Level information. Where we do search. */
+    
+    
+    public class EventLevelInfo
+    {
+        public string strId         {get; set;}
+        public string strName       {get; set;}
+       
+    public EventLevelInfo(EventLevel__c sEventLevel){
+        
+            this.strId          = sEventLevel.id;
+            this.strName        = sEventLevel.Name;
+        }
+    }
+
+        /*
+        Description : Internal class. Create Campaign Member.
+    */
+    public class CampaignMemberInfo
+    {
+        public id AttendeeId            {get; set;}
+        public id CampaignMemberId      {get; set;}
+
+        public CampaignMemberInfo(CampaignMember sCM)
+        {
+            this.AttendeeId         = sCM.ContactId;
+            this.CampaignMemberId   = sCM.id;
+        }
+    }
+    
+    
+    public Campaign sCampaign {get; set;}
+   	  //NH - 3/02/2016 ---> Instantiating Event Request Variables
+    public EventRequest__c sEventRequest {get; set;}
+    public EventRequest__c sEventRequestUpdated {get; set;}
+    public string WBS {get; set;}
+    public EventLevel__c sEventLevel {get; set;}
+    public string EventRequest {get;set;}
+    //The parameter would be used to merge the Name, Total Price per ticket, remaining and Name fields in one dropdown list row
+    public string sConsolidatedEventLevel {get; set;}
+   	public EventPortal_Detail() {
+       sCampaign = new Campaign();
+  }
+
+/* NH - 8/02/206 -- Query for creating picklist from EventLevel Records*/
+    
+// The variable holds the list of event levels available for this campaign
+public string SelectedEventLevel{set; get; }    
+//The variable holds the selected Event Level Value
+public list<SelectOption> ELOptionList {get; set;}  
+public list<SelectOption> getListofEventLevel()
+ {
+     List<EventLevel__c> EventLevels=[select Id, ConsolidatedEventLevelInfo__c from EventLevel__c where EventName__c=:sCampaign.Id];
+     List<SelectOption> ELOptionList = new List<SelectOption>();
+     ELOptionList.add(new SelectOption('', '---Select---'));
+     for (EventLevel__c EL : EventLevels)
+     {
+     ELOptionList.add(new SelectOption(EL.Id, El.ConsolidatedEventLevelInfo__c));}
+     return ELOptionList;
+}
+    public void init(){
+
+        string CampaignToken = Apexpages.currentPage().getParameters().get('CToken');
+    string UserToken = Apexpages.currentPage().getParameters().get('UToken');
+        try
+        {
+           // Util Class querey: sCampaign = [select id, Name,EventVenueAddress__c, Event_Venue_Name__c, Event_City__c from Campaign where Security_Key__c =: CampaignToken]; 
+            sCampaign = Utils.getCampaignDetail(CampaignToken);
+           
+            /*NH - 3/02/2016 ---> Util Class query: sEventREquest = [select Name, Additional_Tickets__c,Copy_EA__c,EventLevel__c,Invite_Sent__c,MD_CAL__c,Quantity__c,SelfServ_Link__c,Status__c,Tickets_Remaining__c,Total_Attending__c,WBS__c
+ from EventRequest__c where Event__c=:sCampaign.Id]*/
+            sEventRequest = Utils.getEventRequest(sCampaign.ID);
+            
+            /* Getting List of event levels*/
+            ELOptionList = getListofEventLevel();
+
+        }
+        catch(Exception e){
+
+        }
+        
+    }
+
+    @RemoteAction
+    public static List<AttendeeInfo> queryAttendee(String strAttendeeName){
+        
+        List<AttendeeInfo> lstAttendeeInfo = new List<AttendeeInfo>();
+
+        string strQuery = 'select id, FirstName, LastName, Name, Email, Phone, Account.Name, Title from Contact where Name like \'%' + String.escapeSingleQuotes(strAttendeeName) + '%\'';
+
+        system.debug('strQuery:'+strQuery);
+
+        for(Contact sContact : database.query(strQuery)){
+
+            lstAttendeeInfo.add(new AttendeeInfo(sContact));
+        }
+        system.debug('lstAttendeeInfo:'+lstAttendeeInfo);
+
+        return lstAttendeeInfo;
+    }
+
+    
+    @RemoteAction
+    public static id createAttendee(string strFirstName, string strLastName){
+        
+        Contact sContact = new Contact();
+        sContact.FirstName = strFirstName;
+        sContact.LastName = strLastName;
+        insert sContact;
+
+        return sContact.id;
+    }
+    
+    /*
+        Description         : Create Campaign Member.
+        Param:
+        strCampaignMember   : List of Contact Id for CampaignMember
+        CampaignToken       : Campaign token number to find campaign
+        UserToken           : Contact token number to fins contact.
+    */
+    @RemoteAction
+    public static list<CampaignMemberInfo> addToCampaignMember(string strCampaignMember,string CampaignToken, string UserToken){
+        
+        list<CampaignMemberInfo> lstCampaignMember = new list<CampaignMemberInfo>(); 
+        Campaign sCampaign = new Campaign();
+        Contact sContact = new Contact();
+
+        try
+        {
+            sCampaign = Utils.getCampaignDetail(CampaignToken);
+            sContact = Utils.getContactDetail(UserToken);
+        }
+        catch(Exception e){
+
+        }
+
+        list<CampaignMember> CampaignMembers = new list<CampaignMember>();
+        
+        string[] arrId = strCampaignMember.split(',');
+        
+        system.debug('arrId:'+arrId);
+        
+        for(id sid : arrId){
+            CampaignMember sCM = new CampaignMember();
+            sCM.Campaignid  = sCampaign.id;
+            sCM.ContactId   = sid;
+            sCM.MD_Cal__c   = sContact.id;
+            CampaignMembers.add(sCM);
+        }
+        system.debug('CampaignMembers:'+CampaignMembers);
+        // Create Campaign Member
+
+        insert CampaignMembers;
+
+        for(CampaignMember sCM : CampaignMembers)
+        {
+            lstCampaignMember.add(new CampaignMemberInfo(sCM));
+        }
+
+        return lstCampaignMember;
+    }
+}
