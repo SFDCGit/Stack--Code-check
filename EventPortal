@@ -1,0 +1,451 @@
+VF page:
+<apex:page controller="EventPortal_Detail" action="{!init}" showHeader="false" sidebar="false" standardStylesheets="false" applyHtmlTag="false" applyBodyTag="false" docType="html-5.0">
+    <html xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+        <head>
+          <title>Add Attendee</title>
+          <meta charset="utf-8"/>
+          <meta name="viewport" content="width=device-width, initial-scale=1"/>
+          <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" />
+          <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+          <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+         </head>
+        <body>
+            <div class="container">
+                <div class="jumbotron">
+                    <h2>{!sCampaign.Name}</h2>
+                </div>
+                 <div class="header" >
+                 <h2 Token="$color-background-chrome-mobile">Event Information</h2>
+                 </div>
+                <!--NH - 06/02/2016 -- Added Status Picklist-->
+                <div class="form-group">
+                <label for="{!sEventRequest.Status__c}"> Status:  </label> 
+                <apex:outputText value="{!sEventRequest.Status__c}">
+                </apex:outputText>
+                </div>
+               <!--NH -04/02/2016 --  Added Remaining fields-->
+                <div class="form-group">
+                <label for="{!sCampaign.Event_City__c}">Event City:  </label> 
+                <apex:outputText value="{!sCampaign.Event_City__c}"></apex:outputText>
+                </div>
+               <div class="form-group">
+               <label for="{!sCampaign.Event_Venue_Name__c}">Event Venue Name:  </label>
+                <apex:outputText value="{!sCampaign.Event_Venue_Name__c}"></apex:outputText>
+                </div>
+                <div class="form-group">
+                <label for="{!sCampaign.EventVenueAddress__c}">Event Venue Address:  </label>    
+                <apex:outputText value="{!sCampaign.EventVenueAddress__c}"></apex:outputText>
+                </div>
+                 
+                <div class="form-group">
+                 <apex:form>   
+                 <label for="WBS">WBS:</label>
+                 <apex:InputField html-placeholder="WBS" styleClass="form-group" id="WBS" value="{!sEventRequest.WBS__c}" />
+                 </apex:form>
+                 </div>
+                
+<!-- NH-5/02/2016 Ticket Level, Quantity Remaining and Total Price per ticket Lookup-->
+               <div class="form-group"> 
+               <apex:form >
+                 <label for="{!sEventRequest.EventLevel__c}"> Event Level,Tickets Qty Available, Price Per Ticket:  </label>  
+                <div class="row" ></div>
+                <apex:selectList value="{!SelectedEventLevel}" size="1" multiselect="false">
+                <apex:selectOptions value="{!ELOptionList}"></apex:selectOptions>
+                </apex:selectList>
+                </apex:form>
+                </div>
+
+                <div class="form-group">
+                 <label for="{!sEventRequest.Quantity__c}">Request Quantity: </label>
+                 <input type="number" placeholder="Quantity" class="form-control" id="{!sEventRequest.Quantity__c}" required="true"/>
+                 </div>
+<!--Additional Level of tickets-->
+                <div class="slds-form-element">
+                <label class="slds-form-element__label" for="{!sEventRequest.Additional_Tickets__c}">Additional Tickets Levels?:</label>
+                <div class="slds-form-element__control">
+                <textarea id="AddTicketLevels" class="slds-textarea" placeholder="Additional Ticket Levels"></textarea>
+                </div>
+                </div>
+                    
+<!-- NH-5/02/2016 Copy EA checkbox-->   
+<div class="slds-form-element">
+  <label class="slds-checkbox" for="{!sEventRequest.Copy_EA__c}">
+    <input name="CopyEA" type="checkbox" id="CopyEmail" />
+    <span class="slds-checkbox--faux"></span>
+    <span class="slds-form-element__label">Copy EA</span>
+  </label>
+</div>
+  <div class="row">
+                <div class="header" >
+                <h2 Token="$color-background-chrome-mobile">External Attendee</h2>
+                 </div>
+                     <div class="table-responsive">
+                        <table id="tblExternal" class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th scope="col">
+                                    <span>Attendee Name</span>
+                                </th>
+                                <th scope="col">
+                                    <span>Company</span>
+                                </th>
+                                <th scope="col">
+                                    <span>Title</span>
+                                </th>
+                                <th scope="col">
+                                    <span>Phone</span>
+                                </th>
+                                <th scope="col">
+                                    <span>Email</span>
+                                </th>
+                                <th>
+                                &nbsp;
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        
+                           <!-- <tr>
+                                <th role="row">D'Cruz, Liz</th>
+                                <td>Acme</td>
+                                <td>
+                                    VP, Production
+                                </td>
+                                <td>
+                                    (650) 450-8810
+                                </td>
+                                <td >
+                                    ldcruz@uog.com
+                                </td>
+                                <td>
+                                    
+                                </td>
+                            </tr>
+                            <tr>
+                                <th role="row">Davis, Josh</th>
+                                <td>Express Logistics and Transport</td>
+                                <td>
+                                    Director, Warehouse Mgmt
+                                </td>
+                                <td>
+                                    (503) 421-7800
+                                </td>
+                                <td>
+                                    j.davis@express.net
+                                </td>
+                                <td>
+                                    
+                                </td> 
+                            </tr>--> 
+                        </tbody>
+                        </table>
+                        <button type="button" class="btn btn-default" id="btnCreateAddendee">Add Attendee</button>
+                        <button type="button" class="btn btn-default" id="btnSearchAddendee">Search Attendee</button>
+                        
+                    </div>
+                    <hr/>
+                    Internal  Attendee
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th scope="col">
+                                        <span>Attendee Name</span>
+                                    </th>
+                                    <th scope="col">
+                                        <span>Company</span>
+                                    </th>
+                                    <th scope="col">
+                                        <span>Title</span>
+                                    </th>
+                                    <th scope="col">
+                                        <span>Phone</span>
+                                    </th>
+                                    <th scope="col">
+                                        <span>Email</span>
+                                    </th>
+                                    <th>
+                                    &nbsp;
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- <tr>
+                                    <th role="row"><a href="#" >D'Cruz, Liz</a></th>
+                                    <td><a href="#" >Acme</a></td>
+                                    <td >
+                                        <span>VP, Production</span>
+                                    </td>
+                                    <td>
+                                        <span>(650) 450-8810</span>
+                                    </td>
+                                    <td >
+                                        <span >ldcruz@uog.com</span>
+                                    </td>
+                                    <td>
+                                        
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th role="row"><a href="#" class="slds-truncate">Davis, Josh</a></th>
+                                    <td ><a href="#" class="slds-truncate">Express Logistics and Transport</a></td>
+                                    <td >
+                                        <span >Director, Warehouse Mgmt</span>
+                                    </td>
+                                    <td >
+                                        <span >(503) 421-7800</span>
+                                    </td>
+                                    <td >
+                                        <span >j.davis@express.net</span>
+                                    </td>
+                                    <td>
+                                        
+                                    </td>
+                                </tr> -->
+                            </tbody>
+                        </table>
+                    </div>
+    <!-- NH-5/02/2016 Submit Request -->
+    <apex:form>
+    <apex:commandButton action="{!updateEventRequest}" id="SubmitRequest" value="Submit Request">  
+    </apex:commandButton>    
+    </apex:form>
+    <div class="modal fade" id="popupContactCreate" role="dialog">
+                        <div class="modal-dialog">
+                            <!-- Modal content-->
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h2>Add Attendee</h2>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="form-group">
+                                        <label for="firstName">First Name:</label>
+                                        <input type="text" placeholder="First Name" class="form-control" id="firstName" />
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="lastName">Last Name</label>
+                                        <input type="text" placeholder="Last Name" class="form-control" id="lastName" required="true"/>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="company">Company</label>
+                                        <input type="text" placeholder="Company" class="form-control" id="company" />
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="title" >Title</label>
+                                        <input type="text" placeholder="Title" class="form-control" id="title" />
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="phone" >Phone</label>
+                                        <input type="text" placeholder="Phone" class="form-control" id="phone" />
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="email" >Email</label>
+                                        <input type="email" placeholder="Email" class="form-control" id="email" />
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                  <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                                  <button type="button" class="btn btn-primary" id="popupContactCreateSave">Save</button>
+                                </div>
+                            </div>
+                        </div>
+                     </div>
+                     
+                     <div id="popupSearch" class="modal fade" role="dialog">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h2>Search Attendee</h2>
+                                </div>
+                                <div class="modal-body">
+                                    <div>
+                                        <div class="row">
+                                            <div class="col-sm-10" style="padding-right: 0px;"><input id="attendeeSearch" class="form-control" type="text" placeholder="Search.." /></div>
+                                            <div class="col-sm-2" style="padding-left: 0px;"><button class="btn btn-default" id="btnSearchAttendee">Search</button></div>
+                                        </div>
+                                    </div>
+                                    <hr/>
+                                    <div id="attendeeList">
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <Button class="btn btn-default" id="btsSearchClose">Close</Button>
+                                    <Button class="btn btn-primary" id="btnAddAttendee">Add Attendee</Button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+  
+         </body>
+        <script type="text/javascript">
+            var jq = jQuery.noConflict();
+            var CToken = '{!$CurrentPage.parameters.CToken}';
+            var UToken = '{!$CurrentPage.parameters.UToken}';
+            mapAttendeeQuery = new Object();
+            var varAttendeeId = '';
+            jsMapAddendees = new Object();
+            jsMapEventLevel = new Object();
+                    jq(document).ready(function(){
+                    jq("#btnCreateAddendee").click(function(){
+                    jq("#popupContactCreate").modal();
+                });
+            
+                jq("#popupContactCreateSave").click(function(){
+                    addTableRow();
+                    jq("#popupContactCreate").modal("hide");
+                });
+                
+                jq("#btnSearchAddendee").click(function(){
+                    jq("#popupSearch").modal();
+                });
+                         
+                jq("#btsSearchClose").click(function(){
+                   jq("#popupSearch").modal("hide");
+                });
+                
+                jq("#btnSearchAttendee").click(function(){
+                    
+                    queryAttendee();
+                });
+                
+                jq("#btnAddAttendee").click(function(){
+                    
+                    // Add Attendee to Campaign
+                    addAttendeetoCampaign();
+                });
+                       });
+             
+            function addAttendeetoCampaign(){
+                varAttendeeId = '';
+                
+                jq(".attendeeChk:checked").each(function()
+                {
+                    varAttendeeId+=jq(this).val()+",";
+                });
+                
+                if(varAttendeeId != ''){
+                    
+                    Visualforce.remoting.Manager.invokeAction('{!$RemoteAction.EventPortal_Detail.addToCampaignMember}',
+                    varAttendeeId,
+                    CToken,
+                    UToken,
+                    function handleResultresponse(result, event){
+                        if (event.status){
+                            var tableRef = document.getElementById('tblExternal').getElementsByTagName('tbody')[0];
+
+                            result.forEach(function(record) {
+                        
+                                // Insert a row in the table at the last row
+                                var newRow   = tableRef.insertRow(tableRef.rows.length);
+                                // Insert a cell in the row at index 0
+                                var newCell1  = newRow.insertCell(0);
+                                var newCell2  = newRow.insertCell(1);
+                                var newCell3  = newRow.insertCell(2);
+                                var newCell4  = newRow.insertCell(3);
+                                var newCell5  = newRow.insertCell(4);
+                                var newCell6  = newRow.insertCell(5);
+                                // Append a text node to the cell
+                                newCell1.innerHTML = mapAttendeeQuery[record.AttendeeId].strName;
+                                newCell2.innerHTML = mapAttendeeQuery[record.AttendeeId].CompanyName;
+                                newCell3.innerHTML = "";
+                                newCell4.innerHTML = "";
+                                newCell5.innerHTML = "";
+                                newCell6.innerHTML = "";
+                    
+                            });
+                        }
+                    },
+                    {escape: true})
+                }
+            }
+                
+            function queryAttendee () {
+                var varAttendeeSearch = document.getElementById("attendeeSearch").value;
+                var varAttendeeList = document.getElementById("attendeeList"); 
+                mapAttendeeQuery = new Object();
+                var result = Visualforce.remoting.Manager.invokeAction('{!$RemoteAction.EventPortal_Detail.queryAttendee}',varAttendeeSearch,handleResultresponse);
+    
+                function handleResultresponse(result, event){
+                    if (event.status){
+                        var html = '<div class="table-responsive"><table class="table table-hover">';
+                        html += '<thead>';
+                        html += '<tr>';
+                        html += '<th>';
+                        html += '<label for="select-all">';
+                        html += '<input name="checkbox" type="checkbox" id="select-all" />';
+                        html += '<span>select all</span>';
+                        html += '</label>';
+                        html += '</th>';
+                        html += '<th scope="col"><span>Name</span></th>';
+                        html += '<th scope="col"><span>Company</span></th>';
+                        html += '<th scope="col"><span>Email</span></th>';
+                        html += '</tr>';
+                        html += '</thead>';
+                        html += '<tbody>';
+                        
+                        result.forEach(function(record) {
+                            
+                            var AttendeeInfo = {
+                                strId           : record.strId, 
+                                strName         : record.strName,
+                                strEmail        : typeof record.strEmail === "undefined" ? "" : record.strEmail,
+                                CompanyName     : typeof record.CompanyName === "undefined" ? "" : record.CompanyName
+                            }
+                            
+                            html += '<tr>';
+                            html += '<td><input name="checkbox" type="checkbox" class="attendeeChk" id="chk' + AttendeeInfo.strId + '" value="' + AttendeeInfo.strId +  '" /></td>';
+                            html += '<td>' + AttendeeInfo.strName + '</td>';
+                            html += '<td>' + AttendeeInfo.CompanyName + '</td>';
+                            html += '<td>' + AttendeeInfo.strEmail  + '</td>';
+                            html += '</tr>';
+                            
+                            mapAttendeeQuery[record.strId] = AttendeeInfo;
+                            
+                        })
+    
+                        html += '</tbody>';
+                        html += '</table></div>';
+    
+                        varAttendeeList.innerHTML = html;
+                    }
+                }
+            }
+        
+            function addTableRow () {
+                var varFirstName = document.getElementById("firstName").value;
+                var varLastName = document.getElementById("lastName").value;
+
+                var result = Visualforce.remoting.Manager.invokeAction('{!$RemoteAction.EventPortal_Detail.createAttendee}',varFirstName,varLastName,handleaddAttendeeResultresponse);
+
+                function handleaddAttendeeResultresponse(result, event){
+                    if (event.status){
+
+                        var tableRef = document.getElementById('tblExternal').getElementsByTagName('tbody')[0];
+                        // Insert a row in the table at the last row
+                        var newRow   = tableRef.insertRow(tableRef.rows.length);
+                        // Insert a cell in the row at index 0
+                        var newCell1  = newRow.insertCell(0);
+                        var newCell2  = newRow.insertCell(1);
+                        var newCell3  = newRow.insertCell(2);
+                        var newCell4  = newRow.insertCell(3);
+                        var newCell5  = newRow.insertCell(4);
+                        var newCell6  = newRow.insertCell(5);
+                        // Append a text node to the cell
+                        newCell1.innerHTML = varFirstName + " " + varLastName;
+                        newCell2.innerHTML = "";
+                        newCell3.innerHTML = "";
+                        newCell4.innerHTML = "";
+                        newCell5.innerHTML = "";
+                        newCell6.innerHTML = "";
+                       hideAddAttendeePopup();
+                    }
+                }
+            }
+
+          
+            
+        </script>
+    </html>
+</apex:page>
