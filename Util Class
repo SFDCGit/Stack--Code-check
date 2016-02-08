@@ -1,0 +1,99 @@
+public class Utils 
+{
+    public static Campaign  sCampaign   {get; set;}
+    public static Contact   sContact    {get; set;}    
+    public static Campaign getCampaignDetail(string CampaignToken){
+        system.debug(CampaignToken);
+         if(sCampaign == null){
+            system.debug(CampaignToken);
+            sCampaign = [select id, Name,EventVenueAddress__c, Event_Venue_Name__c, Event_City__c from Campaign where Security_Key__c =: CampaignToken];    
+          system.debug(sCampaign.EventVenueAddress__c);
+          system.debug(sCampaign.Event_Venue_Name__c);
+          system.debug(sCampaign.Event_City__c);
+         }
+         
+         return sCampaign;
+    }
+    //NH: Updating to retrieve EventRequests --3/02/2016
+       public static EventRequest__c sEventRequest {get; set;}
+   
+    public static EventRequest__c getEventRequest(string sCampaignId){
+       sEventRequest  = [select Name, Additional_Tickets__c,EventLevel__c,Copy_EA__c,MD_CAL__c,Quantity__c,SelfServ_Link__c,Status__c,Tickets_Remaining__c,Total_Attending__c,WBS__c
+ from EventRequest__c where Event__c=:sCampaign.Id limit 1];
+       
+       return sEventRequest;
+       }
+
+    public static Contact getContactDetail(string ContactToken){
+
+        if(sContact == null){
+
+            sContact = [select id, Name from Contact where  Security_Key__c =: ContactToken limit 1];
+        }
+
+        return sContact;
+    }
+    
+    public static String EncryptString (string EncrptKey){
+        //Eencrypted Campaign Member Name
+        Blob cryptoKey = Crypto.generateAesKey(256);
+        // Generate the data to be encrypted.
+        Blob data = Blob.valueOf(EncrptKey);
+        // Encrypt the data and have Salesforce.com generate the initialization vector
+        Blob encryptedData = Crypto.encryptWithManagedIV('AES256', cryptoKey, data);
+        return EncodingUtil.convertToHex(encryptedData);
+    }
+    
+    
+    /* Send Email with Parent Obj ID attachment on behalf of MD */
+    
+    public static void SendeMailWithAtt(Id objId, string ToAddress,string FromAddress,string FromName, Id templateId, string CCAddress,  string BCCAddress,Id AttObjId,Id ParentId) {
+
+    Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
+    mail.setReplyTo(FromAddress);
+    
+    list<string> SendTo = new list<string>();
+    SendTo.add(ToAddress);
+    mail.setToAddresses(SendTo);
+    mail.setTemplateId(templateId);
+    mail.setTargetObjectId(objId);
+    mail.saveAsActivity = true;
+    mail.setSenderDisplayName(FromName);
+    mail.setWhatId(ParentId); // ParentId is EventRequest record related to CampaignMember
+
+	// Find and attach attachments from EventRequest record or anyother AttObj
+	//Attach from Campaign or EventRequest
+	// Check if there is a MD personalised Attachment for the Ticket Level.
+	List<Messaging.Emailfileattachment> fileAttachments = new List<Messaging.Emailfileattachment>();
+	for (Attachment a : [select Name, Body, BodyLength from Attachment where ParentId = :ParentId])
+	{
+	   Messaging.Emailfileattachment efa = new Messaging.Emailfileattachment();
+	  efa.setFileName(a.Name);
+	  efa.setBody(a.Body);
+	  fileAttachments.add(efa);
+	}
+	
+	//If no personalised attachment found, look for default attachment
+	if(fileAttachments!=null){
+		for (Attachment a : [select Name, Body, BodyLength from Attachment where ParentId = :AttObjId])
+		{
+		  Messaging.Emailfileattachment efa = new Messaging.Emailfileattachment();
+		  efa.setFileName(a.Name);
+		  efa.setBody(a.Body);
+		  fileAttachments.add(efa);
+		}
+	
+	}
+	
+	// if any attachment is found, send email with attachment
+	if(fileAttachments!=null){
+		mail.setFileAttachments(fileAttachments);
+	}
+   System.debug('Email being sent to :'+ objId);
+    System.debug('objId found:  ' + objId);
+    System.debug('templateId found:  ' + templateId);
+    System.debug('fromaddress found:  ' + fromaddress);
+
+    Messaging.sendEmail(new Messaging.SingleEmailmessage[] {mail});
+	}
+}
